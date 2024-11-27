@@ -1109,7 +1109,9 @@ func (db *DB) get(auxm *memdb.DB, auxt tFiles, key []byte, seq uint64, ro *opt.R
 
 	v := db.s.version() //快照的版本？
 	//v.get为在磁盘上查询的处理
-	//fmt.Println("get from disk")
+	fmt.Println("version : ")
+	fmt.Println(v.id)
+	fmt.Println("get from disk")
 	value, cSched, err := v.get(auxt, ikey, ro, false)
 	v.release()
 	if cSched {

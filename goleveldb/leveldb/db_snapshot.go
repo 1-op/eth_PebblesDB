@@ -40,6 +40,8 @@ func (db *DB) acquireSnapshot() *snapshotElement {
 			panic("leveldb: sequence number is not increasing")
 		}
 	}
+	//fmt.Println(strconv.FormatUint(seq, 10))
+
 	se := &snapshotElement{seq: seq, ref: 1}
 	se.e = db.snapsList.PushBack(se)
 	return se

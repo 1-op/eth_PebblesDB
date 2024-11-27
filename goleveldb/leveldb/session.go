@@ -141,6 +141,7 @@ func (s *session) recover() (err error) {
 		}
 	}()
 
+	//这里得到的fd指向的是 MANIFEST 文件
 	fd, err := s.stor.GetMeta()
 	if err != nil {
 		return
@@ -170,9 +171,9 @@ func (s *session) recover() (err error) {
 			return errors.SetFd(err, fd)
 		}
 		err = rec.decode(r) //对sr的decode？在rec执行此方法之后，SessionRecord中成员被赋值
-		/*fmt.Println("位于recover()中，这里是sessionRecord")
-		fmt.Println(rec.addedTabless,"  ",rec.addedTables)
-		fmt.Println(rec.deletedTabless,"  ",rec.deletedTables)*/
+		//fmt.Println("位于recover()中，这里是sessionRecord")
+		//fmt.Println(rec.addedTabless, "  ", rec.addedTables)
+		//fmt.Println(rec.deletedTabless, "  ", rec.deletedTables)
 		if err == nil {
 			// save compact pointers
 			for _, r := range rec.compPtrs {

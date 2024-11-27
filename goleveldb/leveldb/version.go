@@ -55,6 +55,7 @@ type version struct {
 func newVersion(s *session) *version { //只有s和id有值
 	id := atomic.AddInt64(&s.ntVersionId, 1)
 	nv := &version{s: s, id: id - 1}
+	fmt.Printf("new version id: %d\n", nv.id)
 	return nv
 }
 
@@ -113,9 +114,12 @@ func (v *version) walkOverlapping(aux tFiles, ikey internalKey, f func(level int
 			return
 		}
 	}
-	//fmt.Println("This is levels:",v.levels)
+	fmt.Println("This is levels:", v.levels)
 	// Walk tables level-by-level.一层层遍历tfile
 	for level, tables := range v.levels {
+		fmt.Print("level:", level)
+		fmt.Println(", sstable number:", len(tables))
+		//tables
 		if len(tables) == 0 {
 			continue
 		}

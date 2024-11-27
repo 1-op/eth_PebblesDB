@@ -290,6 +290,7 @@ func (fs *fileStorage) SetMeta(fd FileDesc) error {
 }
 
 func (fs *fileStorage) GetMeta() (FileDesc, error) {
+	fmt.Printf("get meta\n")
 	fs.mu.Lock()
 	defer fs.mu.Unlock()
 	if fs.open < 0 {

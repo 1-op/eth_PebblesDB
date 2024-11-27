@@ -198,6 +198,7 @@ func GetTransaction(db *myethdb.LDBDatabase, hash common.Hash) (*types.Transacti
 	}
 	for txIndex, tx := range body.Transactions {
 		if tx.Hash() == hash {
+			fmt.Printf("success get tx\n")
 			return tx, common.BytesToHash(blkhash3), blockNumber, uint64(txIndex)
 		}
 	}
@@ -262,7 +263,7 @@ func TestObtainAllMPTroot(db *myethdb.LDBDatabase) {
 func write_txt_kv_2_db(db *myethdb.LDBDatabase) {
 
 	defer db.Close()
-	fi, err := os.Open("E:\\DB\\ExpData-80G")
+	fi, err := os.Open("E:\\DB\\ExpData-10G")
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
@@ -275,7 +276,7 @@ func write_txt_kv_2_db(db *myethdb.LDBDatabase) {
 	totali := 0
 	keyi := 0
 	br := bufio.NewReader(fi)
-	buf := []byte{0, 0, 0, 0}
+	//buf := []byte{0, 0, 0, 0}
 
 	cnt_l := 0
 	cnt_h := 0
@@ -303,11 +304,16 @@ func write_txt_kv_2_db(db *myethdb.LDBDatabase) {
 				break
 			}
 
+			_ = db.Put(key, value)
+			size32 += len(key) + len(value)
+			if size32 > 3*1024*1024*1024 {
+				//break
+			}
 			if len(key) == 32 {
 				// state data
-				key = append(buf[:], key...)
+				//key = append(buf[:], key...)
 				//_ = db.Put(key, value)
-				size32 += len(key) + len(value)
+				//size32 += len(key) + len(value)
 			} else {
 
 				if len(key) >= 33 && bytes.Compare(key[:1], txLookupPrefix) == 0 {
@@ -356,7 +362,7 @@ func write_txt_kv_2_db(db *myethdb.LDBDatabase) {
 		}
 		totali++
 	}
-	fmt.Printf("l:%d h:%d t:%d n:%d H:%d b:%d r:%d B:%d o:%d\n", cnt_l, cnt_h, cnt_t, cnt_n, cnt_H, cnt_b, cnt_r, cnt_B, cnt_a, cnt_o)
+	//fmt.Printf("l:%d h:%d t:%d n:%d H:%d b:%d r:%d B:%d o:%d\n", cnt_l, cnt_h, cnt_t, cnt_n, cnt_H, cnt_b, cnt_r, cnt_B, cnt_a, cnt_o)
 
 	size = size32 + sizeNo32
 	fmt.Println("总条目数:", totali, "key数目:", keyi)
@@ -389,7 +395,8 @@ func TestTranscation(db *myethdb.LDBDatabase) {
 			Count_T++
 		}
 		Txnumber++
-		if Count_T == 10000000 { //保存了10100000个交易
+		//if Count_T == 10000000 { //保存了10100000个交易
+		if Count_T == 100 { //保存了10100000个交易
 			break
 		}
 	}
@@ -397,7 +404,7 @@ func TestTranscation(db *myethdb.LDBDatabase) {
 	fmt.Println("============================")
 	number := 0
 	rand.Seed(0)
-	LoopCnt = 100000
+	LoopCnt = 2
 	for i := 0; i < LoopCnt; i++ {
 		//j := rand.Intn(10000000)
 		//j:=5284409
@@ -487,8 +494,8 @@ func TestAcc(db *myethdb.LDBDatabase) {
 
 func main() {
 	//path := "E:\\eth\\execution\\db\\geth\\chaindata"
-	path := "E:\\DB\\db\\10G"
-	db, err := myethdb.NewLDBDatabase(path, 16, 128)
+	path := "E:\\DB\\db\\80G"
+	db, err := myethdb.NewLDBDatabase(path, 16, -1) //128
 	if err != nil {
 		return
 	}
@@ -500,9 +507,9 @@ func main() {
 	//fmt.Printf("tx index : %d\n", b)
 	//fmt.Println(tt1, tt2, tt3)
 
-	//write_txt_kv_2_db(db)
+	write_txt_kv_2_db(db)
 
-	TestTranscation(db)
+	//TestTranscation(db)
 
 	//TestObtainAllMPTroot(db)
 

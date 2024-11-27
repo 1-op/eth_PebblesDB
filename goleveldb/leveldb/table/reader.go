@@ -522,9 +522,13 @@ type Reader struct {
 	verifyChecksum bool              //crc？
 
 	dataEnd                   int64
-	metaBH, indexBH, filterBH blockHandle //Handle
-	indexBlock                *block
-	filterBlock               *filterBlock
+	metaBH, indexBH, filterBH blockHandle
+	//metaBH表示meta index block在table中的位置和长度
+	//indexBH表示index block在table中的位置和长度
+	//filterBH表示filter block在table中的位置和长度
+
+	indexBlock  *block       //指向索引块的数据
+	filterBlock *filterBlock //指向filter块的数据
 }
 
 func (r *Reader) blockKind(bh blockHandle) string {

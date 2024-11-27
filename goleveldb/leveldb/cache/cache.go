@@ -411,6 +411,8 @@ func (r *Cache) Get(ns, key uint64, setFunc func() (size int, value Value)) *Han
 					}
 
 					n.size, n.value = setFunc()
+					fmt.Println("sstable metadata : ")
+					fmt.Println(n.value)
 					if n.value == nil {
 						n.size = 0
 						n.mu.Unlock()
