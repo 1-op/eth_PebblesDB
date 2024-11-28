@@ -7,7 +7,6 @@
 package leveldb
 
 import (
-	"bytes"
 	"fmt"
 	//"log"
 	"sync/atomic"
@@ -346,7 +345,8 @@ func (db *DB) writeLocked(batch, ourBatch *Batch, merge, sync bool) error {
 	// 返回DB的mdb以及mdb的剩余空间，如果mdbFree不够则会对mdb进行扩容操作
 	//mdb为memDB类型，mdbFree int 描述内存数据库的大小
 	mdb, mdbFree, err := db.flush(batch.internalLen)
-
+	//fmt.Println(batch.internalLen)
+	//fmt.Println(mdbFree)
 	/*  added by czh
 	log.Println("batch.internalLen:",batch.internalLen,"mdbFree:",mdbFree)     //1MB = 1024KB = 1024 * 1024 = 1048576B
 	*/
@@ -470,12 +470,12 @@ func (db *DB) writeLocked(batch, ourBatch *Batch, merge, sync bool) error {
 		blockNumber的大小，如果一致则继续写入，否则直接调用db.rotateMem(0,false)
 	*/
 	//Added by czh
-	if mdbFree <= 1024*1024 {
-		if bytes.Compare(OLD, NEW) != 0 {
-			Count++
-			db.rotateMem(0, false)
-		}
-	}
+	//if mdbFree <= 1024*1024 {
+	//	if bytes.Compare(OLD, NEW) != 0 {
+	//		Count++
+	//		db.rotateMem(0, false)
+	//	}
+	//}
 
 	db.unlockWrite(overflow, merged, nil)
 	//fmt.Println("写入完毕，return")

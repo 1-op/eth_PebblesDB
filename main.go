@@ -262,7 +262,6 @@ func TestObtainAllMPTroot(db *myethdb.LDBDatabase) {
 }
 func write_txt_kv_2_db(db *myethdb.LDBDatabase) {
 
-	defer db.Close()
 	fi, err := os.Open("E:\\DB\\ExpData-10G")
 	if err != nil {
 		fmt.Printf("Error: %s\n", err)
@@ -306,6 +305,7 @@ func write_txt_kv_2_db(db *myethdb.LDBDatabase) {
 
 			_ = db.Put(key, value)
 			size32 += len(key) + len(value)
+
 			if size32 > 3*1024*1024*1024 {
 				//break
 			}
@@ -494,20 +494,20 @@ func TestAcc(db *myethdb.LDBDatabase) {
 
 func main() {
 	//path := "E:\\eth\\execution\\db\\geth\\chaindata"
-	path := "E:\\DB\\db\\80G"
+	path := "D:\\GoLand_Prj\\LDB_test\\demo2"
 	db, err := myethdb.NewLDBDatabase(path, 16, -1) //128
 	if err != nil {
 		return
 	}
 	defer db.LDB()
 
-	//h := []byte{0xea, 0x10, 0x93, 0xd4, 0x92, 0xa1, 0xdc, 0xb1, 0xbe, 0xf7, 0x08, 0xf7, 0x71, 0xa9, 0x9a, 0x96, 0xff, 0x05, 0xdc, 0xab, 0x81, 0xca, 0x76, 0xc3, 0x19, 0x40, 0x30, 0x01, 0x77, 0xfc, 0xf4, 0x9f}
-	//_, _, a, b := GetTransaction(db, BytesToHash(h))
-	//fmt.Printf("tx block : %d\n", a)
-	//fmt.Printf("tx index : %d\n", b)
-	//fmt.Println(tt1, tt2, tt3)
+	h := []byte{0xea, 0x10, 0x93, 0xd4, 0x92, 0xa1, 0xdc, 0xb1, 0xbe, 0xf7, 0x08, 0xf7, 0x71, 0xa9, 0x9a, 0x96, 0xff, 0x05, 0xdc, 0xab, 0x81, 0xca, 0x76, 0xc3, 0x19, 0x40, 0x30, 0x01, 0x77, 0xfc, 0xf4, 0x9f}
+	_, _, a, b := GetTransaction(db, BytesToHash(h))
+	fmt.Printf("tx block : %d\n", a)
+	fmt.Printf("tx index : %d\n", b)
+	fmt.Println(tt1, tt2, tt3)
 
-	write_txt_kv_2_db(db)
+	//write_txt_kv_2_db(db)
 
 	//TestTranscation(db)
 

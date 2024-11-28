@@ -1,6 +1,7 @@
 package myethdb
 
 import (
+	"fmt"
 	gometrics "github.com/rcrowley/go-metrics"
 	"strconv"
 	"strings"
@@ -43,9 +44,9 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	if cache < 16 {
 		cache = 16
 	}
-	if handles < 16 {
-		handles = 16
-	}
+	//if handles < 16 {
+	//	handles = 16
+	//}
 
 	// Open the db and recover any potential corruptions
 	db, err := leveldb.OpenFile(file, &opt.Options{
@@ -64,6 +65,8 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("-------------------------------------------open success")
 	return &LDBDatabase{
 		fn: file, // 文件名
 		db: db,   // 数据库对象

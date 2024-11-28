@@ -22,28 +22,31 @@ const (
 )
 
 var (
-	DefaultBlockCacher                   = LRUCacher
-	DefaultBlockCacheCapacity            = 8 * MiB
-	DefaultBlockRestartInterval          = 16
-	DefaultBlockSize                     = 4 * KiB //block的大小
-	DefaultCompactionExpandLimitFactor   = 25
-	DefaultCompactionGPOverlapsFactor    = 10       //某种因子
-	DefaultCompactionL0Trigger           = 40000000 //L0层最大的sst数量？
+	DefaultBlockCacher                 = LRUCacher
+	DefaultBlockCacheCapacity          = 8 * MiB
+	DefaultBlockRestartInterval        = 16
+	DefaultBlockSize                   = 4 * KiB //block的大小
+	DefaultCompactionExpandLimitFactor = 25
+	DefaultCompactionGPOverlapsFactor  = 10 //某种因子
+	//DefaultCompactionL0Trigger           = 40000000 //L0层最大的sst数量？
+	DefaultCompactionL0Trigger           = 4 //当 Level 0 中的文件数量达到这个值时，LevelDB 会触发合并操作，将 Level 0 中的数据移动到 Level 1
 	DefaultCompactionL0Trigger2          = 4
 	DefaultCompactionSourceLimitFactor   = 1
-	DefaultCompactionTableSize           = 2 * MiB //参与合并的table大小？
-	DefaultCompactionTableSizeMultiplier = 1.0
-	DefaultCompactionTotalSize           = 10 * MiB //？
-	DefaultCompactionTotalSizeMultiplier = 10.0
+	DefaultCompactionTableSize           = 2 * MiB  //表示 LevelDB 中每个 SST 文件的默认大小
+	DefaultCompactionTableSizeMultiplier = 1.0      //用于计算 Level 1 及更高层级的 SST 文件大小,这里1.0表示所有的sstable大小一样
+	DefaultCompactionTotalSize           = 10 * MiB //表示 LevelDB 中每个层级（除了 Level 0）所有 SST 文件的总大小
+	DefaultCompactionTotalSizeMultiplier = 10.0     //用来计算Level 2以上的大小
 	DefaultCompressionType               = SnappyCompression
 	DefaultIteratorSamplingRate          = 1 * MiB
 	DefaultOpenFilesCacher               = LRUCacher
 	DefaultOpenFilesCacheCapacity        = 500     //最大缓存/打开500个sst文件
 	DefaultWriteBuffer                   = 4 * MiB //mem的大小
-	DefaultWriteL0PauseTrigger           = 120000000
-	DefaultWriteL0PauseTrigger2          = 12
-	DefaultWriteL0SlowdownTrigger        = 80000000
-	DefaultWriteL0SlowdownTrigger2       = 8
+	//DefaultWriteL0PauseTrigger           = 120000000
+	DefaultWriteL0PauseTrigger  = 12 //当 Level 0 中的 SST 文件数量超过这个值时，LevelDB 会暂停对 MemTable 的写入
+	DefaultWriteL0PauseTrigger2 = 12
+	//DefaultWriteL0SlowdownTrigger        = 80000000
+	DefaultWriteL0SlowdownTrigger  = 8 //当 Level 0 中的 SST 文件数量达到这个值时，LevelDB 会减缓对 MemTable 的写入速度
+	DefaultWriteL0SlowdownTrigger2 = 8
 )
 
 // Cacher is a caching algorithm.

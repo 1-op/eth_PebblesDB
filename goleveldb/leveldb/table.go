@@ -730,7 +730,7 @@ func (t *tOps) createFrom_s(src iterator.Iterator) (f *sFile, n int, err error) 
 // be released after use. 打开一个sst文件
 func (t *tOps) open(f *tFile) (ch *cache.Handle, err error) {
 	fmt.Printf("sstable name : %d\n", f.fd.Num)
-	fmt.Printf("sstable size : %dMB\n", f.size/1024/1024)
+	fmt.Printf("sstable size : %fMB\n", float64(f.size)/1024/1024)
 	ch = t.cache.Get(0, uint64(f.fd.Num), func() (size int, value cache.Value) {
 		var r storage.Reader
 		r, err = t.s.stor.Open(f.fd)

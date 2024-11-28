@@ -109,16 +109,14 @@ func (v *version) walkOverlapping(aux tFiles, ikey internalKey, f func(level int
 				}
 			}
 		}
-
 		if lf != nil && !lf(-1) {
 			return
 		}
 	}
-	fmt.Println("This is levels:", v.levels)
+
 	// Walk tables level-by-level.一层层遍历tfile
 	for level, tables := range v.levels {
-		fmt.Print("level:", level)
-		fmt.Println(", sstable number:", len(tables))
+		fmt.Println("-----level:", level, ",total size:", float32(tables.size())/1024/1024, "MB", ", sstable number:", len(tables))
 		//tables
 		if len(tables) == 0 {
 			continue
@@ -144,7 +142,6 @@ func (v *version) walkOverlapping(aux tFiles, ikey internalKey, f func(level int
 				}
 			}
 		}
-
 		if lf != nil && !lf(level) {
 			return
 		}
@@ -229,7 +226,6 @@ func (v *version) get(aux tFiles, ikey internalKey, ro *opt.ReadOptions, noValue
 	)
 
 	err = ErrNotFound
-
 	// Since entries never hop across level, finding key/value
 	// in smaller level make later levels irrelevant. walkoverlapping 是用来定位ikey位于哪个文件中的
 	v.walkOverlapping(aux, ikey, func(level int, t *tFile) bool { //把func作为参数
