@@ -826,6 +826,7 @@ func (t *tOps) findKey_s(f *sFile, key []byte, ro *opt.ReadOptions) (rkey []byte
 
 // Returns approximate offset of the given key.
 func (t *tOps) offsetOf(f *tFile, key []byte) (offset int64, err error) {
+	fmt.Println("offsetof")
 	ch, err := t.open(f)
 	if err != nil {
 		return
@@ -844,6 +845,7 @@ func (t *tOps) offsetOf_s(f *sFile, key []byte) (offset int64, err error) {
 
 // Creates an iterator from the given table.
 func (t *tOps) newIterator(f *tFile, slice *util.Range, ro *opt.ReadOptions) iterator.Iterator {
+	fmt.Println("newIterator")
 	ch, err := t.open(f)
 	if err != nil {
 		return iterator.NewEmptyIterator(err)

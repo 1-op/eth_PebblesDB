@@ -2,7 +2,10 @@ package myethdb
 
 import (
 	"fmt"
+	"github.com/cockroachdb/pebble"
+	"github.com/cockroachdb/pebble/bloom"
 	gometrics "github.com/rcrowley/go-metrics"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -19,8 +22,9 @@ import (
 )
 
 type LDBDatabase struct {
-	fn string      // filename for reporting
-	db *leveldb.DB // LevelDB instance
+	fn   string      // filename for reporting
+	db   *leveldb.DB // LevelDB instance
+	db_p *pebble.DB  // LevelDB instance
 
 	getTimer       gometrics.Timer // Timer for measuring the database get request counts and latencies
 	putTimer       gometrics.Timer // Timer for measuring the database put request counts and latencies
@@ -72,6 +76,89 @@ func NewLDBDatabase(file string, cache int, handles int) (*LDBDatabase, error) {
 		db: db,   // 数据库对象
 	}, nil
 }
+
+func NewLDBDatabase_pebble(file string, cache int, handles int) (*LDBDatabase, error) {
+
+	// Ensure we have some minimal caching and file guarantees
+	if cache < 8 {
+		cache = 8
+	}
+	//if handles < 16 {
+	//	handles = 16
+	//}
+
+	maxMemTableSize := (1<<31)<<(^uint(0)>>63) - 1
+	// Two memory tables is configured which is identical to leveldb,
+	// including a frozen memory table and another live one.
+	memTableLimit := 2
+	memTableSize := cache * 1024 * 1024 / 2 / memTableLimit
+
+	// The memory table size is currently capped at maxMemTableSize-1 due to a
+	// known bug in the pebble where maxMemTableSize is not recognized as a
+	// valid size.
+	//
+	// TODO use the maxMemTableSize as the maximum table size once the issue
+	// in pebble is fixed.
+	if memTableSize >= maxMemTableSize {
+		memTableSize = maxMemTableSize - 1
+	}
+	opt := &pebble.Options{
+		// Pebble has a single combined cache area and the write
+		// buffers are taken from this too. Assign all available
+		// memory allowance for cache.
+		Cache:        pebble.NewCache(int64(cache * 1024 * 1024)),
+		MaxOpenFiles: handles,
+
+		// The size of memory table(as well as the write buffer).
+		// Note, there may have more than two memory tables in the system.
+		MemTableSize: uint64(memTableSize),
+
+		// MemTableStopWritesThreshold places a hard limit on the size
+		// of the existent MemTables(including the frozen one).
+		// Note, this must be the number of tables not the size of all memtables
+		// according to https://github.com/cockroachdb/pebble/blob/master/options.go#L738-L742
+		// and to https://github.com/cockroachdb/pebble/blob/master/db.go#L1892-L1903.
+		MemTableStopWritesThreshold: memTableLimit,
+
+		// The default compaction concurrency(1 thread),
+		// Here use all available CPUs for faster compaction.
+		MaxConcurrentCompactions: runtime.NumCPU,
+
+		// Per-level options. Options for at least one level must be specified. The
+		// options for the last level are used for all subsequent levels.
+		Levels: []pebble.LevelOptions{
+			{TargetFileSize: 2 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+			{TargetFileSize: 4 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+			{TargetFileSize: 8 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+			{TargetFileSize: 16 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+			{TargetFileSize: 32 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+			{TargetFileSize: 64 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+			{TargetFileSize: 128 * 1024 * 1024, FilterPolicy: bloom.FilterPolicy(10)},
+		},
+		ReadOnly: false,
+	}
+	// Disable seek compaction explicitly. Check https://github.com/ethereum/go-ethereum/pull/20130
+	// for more details.
+	opt.Experimental.ReadSamplingMultiplier = -1
+
+	// Open the db and recover any potential corruptions
+	db, err := pebble.Open("./demo", opt)
+	if err != nil {
+	}
+
+	// (Re)check for errors and abort if opening of the db failed
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("-------------------------------------------open success")
+	return &LDBDatabase{
+		fn:   file, // 文件名
+		db:   nil,  // 数据库对象
+		db_p: db,
+	}, nil
+}
+
 func NewLDBDatabase2(file string, cache int, handles int) (*LDBDatabase, error) {
 
 	// Ensure we have some minimal caching and file guarantees
@@ -129,8 +216,12 @@ func (db *LDBDatabase) Put(key []byte, value []byte) error {
 	I++
 	Size += len(key) + len(value)
 	//fmt.Println("From DB",key)
-	return db.db.Put(key, value, nil)
+	if db.db != nil {
+		return db.db.Put(key, value, nil)
+	}
+	return db.db_p.Set(key, value, nil)
 }
+
 func (db *LDBDatabase) Put_s(key []byte, value []byte) error {
 	// Measure the database put latency, if requested
 	if db.putTimer != nil {
@@ -167,7 +258,14 @@ func (db *LDBDatabase) Get(key []byte) ([]byte, error) {
 	}
 	// Retrieve the key and increment the miss counter if not found
 	Ti = time.Now()
-	dat, err := db.db.Get(key, nil)
+	var dat []byte
+	var err error
+	if db.db != nil {
+		dat, err = db.db.Get(key, nil)
+	} else {
+		dat, _, err = db.db_p.Get(key)
+	}
+
 	Tj = time.Now()
 	Count++
 	T += Tj.Sub(Ti).Seconds()
@@ -235,11 +333,16 @@ func (db *LDBDatabase) Close() {
 			db.log.Error("Metrics collection failed", "err", err)
 		}
 	}
-	err := db.db.Close()
-	if err == nil {
-		db.log.Info("Database closed")
+	var err error
+	if db.db != nil {
+		err = db.db.Close()
+		if err == nil {
+			db.log.Info("Database closed")
+		} else {
+			db.log.Error("Failed to close database", "err", err)
+		}
 	} else {
-		db.log.Error("Failed to close database", "err", err)
+		err = db.db_p.Close()
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	trie "awesomeProject1/Prefix_MPT"
 	"awesomeProject1/ethdb"
 	"awesomeProject1/goleveldb/leveldb/cache"
+	//"awesomeProject1/pebble-master"
 	"bufio"
 	"bytes"
 	"encoding/binary"
@@ -198,7 +199,7 @@ func GetTransaction(db *myethdb.LDBDatabase, hash common.Hash) (*types.Transacti
 	}
 	for txIndex, tx := range body.Transactions {
 		if tx.Hash() == hash {
-			fmt.Printf("success get tx\n")
+			//fmt.Printf("success get tx\n")
 			return tx, common.BytesToHash(blkhash3), blockNumber, uint64(txIndex)
 		}
 	}
@@ -396,7 +397,7 @@ func TestTranscation(db *myethdb.LDBDatabase) {
 		}
 		Txnumber++
 		//if Count_T == 10000000 { //保存了10100000个交易
-		if Count_T == 100 { //保存了10100000个交易
+		if Count_T == 10000000 { //保存了10100000个交易
 			break
 		}
 	}
@@ -494,8 +495,9 @@ func TestAcc(db *myethdb.LDBDatabase) {
 
 func main() {
 	//path := "E:\\eth\\execution\\db\\geth\\chaindata"
-	path := "D:\\GoLand_Prj\\LDB_test\\demo2"
-	db, err := myethdb.NewLDBDatabase(path, 16, -1) //128
+	//path := "D:\\GoLand_Prj\\LDB_test\\demo2"
+	db, err := myethdb.NewLDBDatabase("./ldb", 16, -1) //128
+	//db, err := myethdb.NewLDBDatabase_pebble("./demo", 16, 1000) //128
 	if err != nil {
 		return
 	}

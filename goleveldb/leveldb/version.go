@@ -125,9 +125,11 @@ func (v *version) walkOverlapping(aux tFiles, ikey internalKey, f func(level int
 		if level == 0 {
 			// Level-0 files may overlap each other. Find all files that
 			// overlap ukey.//找到所有重叠的key
-			for _, t := range tables {
+			for c, t := range tables {
 				if t.overlaps(v.s.icmp, ukey, ukey) {
-					if !f(level, t) {
+					fmt.Println(c)
+					res := f(level, t)
+					if res == false {
 						return
 					}
 				}
@@ -249,11 +251,14 @@ func (v *version) get(aux tFiles, ikey internalKey, ro *opt.ReadOptions, noValue
 		switch ferr {
 		case nil:
 		case ErrNotFound:
+			fmt.Println("not found")
 			return true
 		default:
 			err = ferr
 			return false
 		}
+		fmt.Println("found")
+
 		//这里是为了跟找到的文件中的key进行比较，确认最新的数据
 		if fukey, fseq, fkt, fkerr := parseInternalKey(fikey); fkerr == nil {
 			if v.s.icmp.uCompare(ukey, fukey) == 0 {

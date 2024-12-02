@@ -1138,6 +1138,5 @@ func NewReader(f io.ReaderAt, size int64, fd storage.FileDesc, cache *cache.Name
 			}
 		}
 	}
-
 	return r, nil
 }
